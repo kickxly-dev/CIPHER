@@ -19,7 +19,7 @@ jobs:
     - name: Build Cipher
       shell: cmd
       run: |
-        cl /EHsc /std:c++17 /O2 /MT /DWIN32 /D_WIN32_WINNT=0x0A00 src\main.cpp /Fe:Cipher.exe user32.lib gdi32.lib shell32.lib advapi32.lib ole32.lib pdh.lib winmm.lib psapi.lib comctl32.lib
+        cl /EHsc /std:c++17 /O2 /MT /DWIN32 /D_WIN32_WINNT=0x0A00 src\main_simple.cpp /Fe:Cipher.exe user32.lib gdi32.lib shell32.lib advapi32.lib ole32.lib pdh.lib winmm.lib psapi.lib comctl32.lib
     
     - name: Test EXE
       run: |
