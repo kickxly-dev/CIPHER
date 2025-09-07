@@ -3,8 +3,6 @@ name: Build Cipher EXE
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -15,86 +13,44 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Setup Visual Studio
-      uses: microsoft/setup-msbuild@v1.3
-      
     - name: Setup MSVC
       uses: ilammy/msvc-dev-cmd@v1
     
     - name: Build Cipher
       shell: cmd
       run: |
-        cl /std:c++17 /O2 /MT /DNDEBUG /DWIN32 /D_WIN32_WINNT=0x0A00 /EHsc /Isrc /Isrc\utils src\main.cpp /Fe:Cipher.exe /link /SUBSYSTEM:WINDOWS user32.lib gdi32.lib shell32.lib advapi32.lib comdlg32.lib ole32.lib oleaut32.lib pdh.lib powrprof.lib shlwapi.lib psapi.lib winmm.lib comctl32.lib uuid.lib
+        cl /EHsc /std:c++17 /O2 /MT /DWIN32 /D_WIN32_WINNT=0x0A00 src\main.cpp /Fe:Cipher.exe user32.lib gdi32.lib shell32.lib advapi32.lib ole32.lib pdh.lib winmm.lib psapi.lib comctl32.lib
     
-    - name: Verify EXE exists
+    - name: Test EXE
       run: |
         if (Test-Path "Cipher.exe") {
-          Write-Host "✓ Cipher.exe built successfully"
-          Get-Item "Cipher.exe" | Select-Object Name, Length
+          $size = (Get-Item "Cipher.exe").Length
+          Write-Host "✓ Cipher.exe created - Size: $size bytes"
         } else {
-          Write-Host "✗ Cipher.exe not found"
+          Write-Host "✗ Build failed"
           exit 1
         }
     
-    - name: Create Release Package
-      run: |
-        New-Item -ItemType Directory -Force -Path "release"
-        Copy-Item "Cipher.exe" "release/"
-        Copy-Item "config/*.json" "release/" -Force
-        @"
-        # Cipher v1.0 - Download and Run!
-        
-        Double-click Cipher.exe to start
-        Press ESC to exit
-        Drag panels to move them
-        
-        Features:
-        - System Monitor
-        - Quick Toggles  
-        - App Launcher
-        - Clipboard Manager
-        - Notes Panel
-        "@ | Out-File "release/README.txt" -Encoding UTF8
-        
     - name: Upload EXE
       uses: actions/upload-artifact@v4
       with:
-        name: Cipher-Windows-EXE
+        name: Cipher-EXE
         path: Cipher.exe
-          
-    - name: Create ZIP
-      run: |
-        Compress-Archive -Path "release/*" -DestinationPath "Cipher-v1.0-Windows.zip"
-        
-    - name: Upload Complete Package
-      uses: actions/upload-artifact@v4
-      with:
-        name: Cipher-Complete-Package
-        path: Cipher-v1.0-Windows.zip
         
     - name: Create Release
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v1.0-${{ github.run_number }}
-        name: Cipher v1.0 Build ${{ github.run_number }}
+        name: Cipher v1.0 - Download Ready
         body: |
-          🚀 **Cipher v1.0 - Ready to Download and Run!**
+          🚀 **Cipher.exe - Ready to Download and Run!**
           
-          **Download**: Click `Cipher.exe` below
-          **Usage**: Double-click to run (no installation needed)
-          **Controls**: Drag panels, Press ESC to exit
+          **Download**: Click Cipher.exe below
+          **Usage**: Double-click to run
+          **Requirements**: Windows 10/11
           
-          **Features**:
-          - 🖥️ System Monitor (CPU, RAM, Temps)
-          - ⚡ Quick Toggles (Volume, WiFi, etc.)
-          - 🚀 App Launcher with shortcuts
-          - 📋 Clipboard History Manager
-          - 📝 Auto-saving Notes Panel
-          
-          **Requirements**: Windows 10/11 only
-        files: |
-          Cipher.exe
-          Cipher-v1.0-Windows.zip
+          No installation needed!
+        files: Cipher.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
